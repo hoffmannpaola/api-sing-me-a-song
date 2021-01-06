@@ -6,7 +6,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const genresRouter = require('./routers/genresRouter');
+const recommendationsRouter = require('./routers/recommendationsRouter');
+
 //Define Routes
+app.use('/genres', genresRouter);
+app.use('/recommendations', recommendationsRouter);
 
 
 module.exports = app;
