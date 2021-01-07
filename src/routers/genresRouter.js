@@ -4,7 +4,7 @@ const router = express.Router();
 
 const genresController = require('../controllers/genresController');
 
-router.post("/");
+router.post("/", genresController.create);
 router.get("/", genresController.getAll);
 
 
