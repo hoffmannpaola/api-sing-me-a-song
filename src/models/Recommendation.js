@@ -17,7 +17,7 @@ Recommendation.init({
         allowNull: false,
     },
     genresIds: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.ARRAY(Sequelize.INTEGER),
         allowNull: false,
     },
     youtubeLink: {
@@ -26,8 +26,9 @@ Recommendation.init({
     },
     score: {
         type: Sequelize.INTEGER,
-        allowNull: false,
-    }
+        allowNull: true,
+        defaultValue: 0
+      },
 }, {
     sequelize,
     timestamps: false,

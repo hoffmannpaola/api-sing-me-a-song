@@ -14,7 +14,7 @@ module.exports = {
         allowNull: false,
       },
       genresIds: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.ARRAY(Sequelize.INTEGER),
         allowNull: false,
       },
       youtubeLink: {
@@ -23,7 +23,8 @@ module.exports = {
       },
       score: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: 0
       },
     });
     

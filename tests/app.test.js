@@ -88,3 +88,91 @@ describe("GET /genres", () => {
         );
     });
 });
+
+describe("POST /recommendations", () => {
+
+    it("Should return 422 if name params is not a string", async () => {
+        const body = {
+            name: 123,
+            genresIds: [32, 23],
+            youtubeLink: "https://www.youtube.com/watch?v=chwyjJbcs1Y",
+        }
+
+        const response = await agent.post('/recommendations').send(body);
+
+        expect(response.status).toBe(422);
+
+    });
+
+    it("Should return 422 if genresIds is not an array", async () => {
+        const body = {
+            name: "Falamansa - Xote dos Milagres",
+            genresIds: 32,
+            youtubeLink: "https://www.youtube.com/watch?v=chwyjJbcs1Y",
+        }
+
+        const response = await agent.post('/recommendations').send(body);
+
+        expect(response.status).toBe(422);
+
+    });
+    it("Should return 422 if genresIds is not an array of integer", async () => {
+        const body = {
+            name: "Falamansa - Xote dos Milagres",
+            genresIds: ['lala', 'lolo'],
+            youtubeLink: "https://www.youtube.com/watch?v=chwyjJbcs1Y",
+        }
+
+        const response = await agent.post('/recommendations').send(body);
+
+        expect(response.status).toBe(422);
+
+    });
+
+    it("Should return 422 if youtubeLink is not a youtube's link", async () => {
+        const body = {
+            name: "Falamansa - Xote dos Milagres",
+            genresIds: [32, 23],
+            youtubeLink: "https://www.google.com",
+        }
+
+        const response = await agent.post('/recommendations').send(body);
+
+        expect(response.status).toBe(422);
+
+    });
+
+    it("Should return 404 if any id does not exist", async () => {
+        
+        const body = {
+            name: "Falamansa - Xote dos Milagres",
+            genresIds: [1800, 1882],
+            youtubeLink: "https://www.youtube.com/watch?v=chwyjJbcs1Y"
+        }
+
+        const response = await agent.post('/recommendations').send(body);
+
+        expect(response.status).toBe(404);
+
+    });
+
+    it("Should return 201 if recommendation was criated", async () => {
+
+        const ids = await db.query("SELECT id FROM genres;");
+       
+        const one = parseInt(ids.rows[0].id);
+        const two = parseInt(ids.rows[1].id);
+        
+        const body = {
+            name: "Falamansa - Xote dos Milagres",
+            genresIds: [one, two],
+            youtubeLink: "https://www.youtube.com/watch?v=chwyjJbcs1Y"
+        }
+
+        const response = await agent.post('/recommendations').send(body);
+
+        expect(response.status).toBe(201);
+
+    });
+
+})
