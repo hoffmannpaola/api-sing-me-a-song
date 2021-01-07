@@ -37,8 +37,7 @@ describe("POST /genres", () => {
 
     it("Should return 409 if genre params already exists", async () => {
 
-        await db.query("INSERT INTO genres (name) values ($1);", [
-            "Axé"]);
+        await db.query("INSERT INTO genres (name) values ($1);", ["Axé"]);
 
         const body = {
             "name": "Axé"
@@ -62,3 +61,30 @@ describe("POST /genres", () => {
 
     });
 })
+
+describe("GET /genres", () => {
+    it('Should return 200 with list of genres', async () => {
+
+        await db.query("INSERT INTO genres (name) values ($1);", ["Pagode"]);
+        await db.query("INSERT INTO genres (name) values ($1);", ["Sertanejo"]);
+        await db.query("INSERT INTO genres (name) values ($1);", ["Emo"]);
+
+        const response = await agent.get("/genres");
+        const allGenres = response.body;
+
+        expect(response.status).toBe(200);
+        expect(allGenres).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    "name": "Pagode"
+                }),
+                expect.objectContaining({
+                    "name": "Sertanejo"
+                }),
+                expect.objectContaining({
+                    "name": "Emo"
+                }),
+            ])
+        );
+    });
+});

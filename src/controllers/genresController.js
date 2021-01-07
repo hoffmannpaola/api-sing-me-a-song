@@ -27,9 +27,12 @@ class GenresController {
 
   async getAll(req, res) {
     try {
-        res.send("deu certo").status(201);
+
+      const genres = await Genre.findAll();
+      res.send(genres).status(200);
       
     } catch (err) {
+      
       console.error(err);
       return res.sendStatus(500);
     }
