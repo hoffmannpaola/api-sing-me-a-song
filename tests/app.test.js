@@ -176,3 +176,60 @@ describe("POST /recommendations", () => {
     });
 
 })
+
+describe("POST /recommendations/:id/upvote", () => {
+    it("Should return 404 if recommendation not exist", async () => {
+
+        const response = await agent.post('/recommendations/9999/upvote');
+
+        expect(response.status).toBe(404);
+
+    });
+
+    it("Should return 200 if score was updated with 1 vote", async () => {
+
+        const ids = await db.query("SELECT id FROM recommendations;");
+        const id = ids.rows[0].id;
+       
+        const response = await agent.post(`/recommendations/${id}/upvote`);
+
+        expect(response.status).toBe(200);
+
+    });
+
+});
+
+describe("POST /recommendations/:id/downvote", () => {
+    it("Should return 404 if recommendation not exist", async () => {
+
+        const response = await agent.post('/recommendations/9999/upvote');
+
+        expect(response.status).toBe(404);
+
+    });
+
+    it("Should return 200 if score was updated with 1 vote less", async () => {
+
+        const ids = await db.query("SELECT id FROM recommendations;");
+        const id = ids.rows[0].id;
+       
+        const response = await agent.post(`/recommendations/${id}/downvote`);
+
+        expect(response.status).toBe(200);
+
+    });
+
+    it("Should return 200 if the recommendation is deleted by having score equal to -5", async () => {
+
+        const result = await db.query("SELECT * FROM recommendations;");
+        const recommendation = result.rows[0];
+
+        await db.query("UPDATE recommendations SET score = -3  WHERE id=$1", [recommendation.id]);
+       
+        const response = await agent.post(`/recommendations/${recommendation.id}/downvote`);
+
+        expect(response.status).toBe(200);
+
+    });
+
+});

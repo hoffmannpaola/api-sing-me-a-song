@@ -17,8 +17,6 @@ class RecommendationsController{
           youtubeLink
         } = req.body;
 
-       
-
         //confirmar ids
         for (let i = 0; i < genresIds.length; i++) {
           
@@ -26,19 +24,13 @@ class RecommendationsController{
           const idGenre = await Genre.findOne({where: {id}});
 
           if(!idGenre) {
-              return res.sendStatus(404);
+            return res.sendStatus(404);
           }
-
-          await Recommendation.create({ name, genresIds, youtubeLink });
-
-          res.sendStatus(201);
 
         }
 
-
-
-
-
+        await Recommendation.create({ name, genresIds, youtubeLink });
+        res.sendStatus(201);
 
       } catch (err) {
         console.error(err);
@@ -46,24 +38,56 @@ class RecommendationsController{
       }
     }
   
-    async getAll(req, res) {
+    async upVote(req, res) {
       try {
-        
+        const id = req.params.id;
+       
+        const recommendation = await Recommendation.findByPk(id);
+
+        if(!recommendation) {
+          return res.sendStatus(404);
+        }
+
+        recommendation.score ++
+
+        await recommendation.save();
+        res.sendStatus(200);
+
       } catch (err) {
         console.error(err);
         return res.sendStatus(500);
       }
     }
-  
-    async getOne(req, res) {
+
+    async downVote(req, res) {
       try {
-        
-      } catch (err) {
+        const id = req.params.id;
+       
+        const recommendation = await Recommendation.findByPk(id);
+
+        if(!recommendation) {
+          return res.sendStatus(404);
+        }
+
+        if (recommendation.score !== -5){
+          recommendation.score--
+          await recommendation.save();
+        } else {
+          //excluir recommendacao
+          await recommendation.destroy();
           
+          
+        }
+
+        res.sendStatus(200);
+
+      } catch (err) {
         console.error(err);
         return res.sendStatus(500);
       }
     }
+  
+    
   }
   
   module.exports = new RecommendationsController();
