@@ -13,10 +13,6 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      genresIds: {
-        type: Sequelize.ARRAY(Sequelize.INTEGER),
-        allowNull: false,
-      },
       youtubeLink: {
         type: Sequelize.STRING,
         allowNull: false,

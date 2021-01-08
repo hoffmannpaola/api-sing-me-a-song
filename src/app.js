@@ -9,6 +9,8 @@ app.use(express.json());
 const genresRouter = require('./routers/genresRouter');
 const recommendationsRouter = require('./routers/recommendationsRouter');
 
+require('./utils/loadRelationships');
+
 //Define Routes
 app.use('/genres', genresRouter);
 app.use('/recommendations', recommendationsRouter);

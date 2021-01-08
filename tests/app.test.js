@@ -13,6 +13,9 @@ const db = new Pool({
 });
 
 beforeAll(async () => {
+ 
+  await db.query("ALTER SEQUENCE recommendations_id_seq RESTART WITH 1;");
+  await db.query("ALTER SEQUENCE genres_id_seq RESTART WITH 1;");
   await db.query("DELETE FROM genres;");
   await db.query("DELETE FROM recommendations;");
 });
@@ -116,6 +119,7 @@ describe("POST /recommendations", () => {
         expect(response.status).toBe(422);
 
     });
+
     it("Should return 422 if genresIds is not an array of integer", async () => {
         const body = {
             name: "Falamansa - Xote dos Milagres",
@@ -161,11 +165,11 @@ describe("POST /recommendations", () => {
         const ids = await db.query("SELECT id FROM genres;");
        
         const one = parseInt(ids.rows[0].id);
-        const two = parseInt(ids.rows[1].id);
+        
         
         const body = {
             name: "Falamansa - Xote dos Milagres",
-            genresIds: [one, two],
+            genresIds: [one],
             youtubeLink: "https://www.youtube.com/watch?v=chwyjJbcs1Y"
         }
 
@@ -180,7 +184,7 @@ describe("POST /recommendations", () => {
 describe("POST /recommendations/:id/upvote", () => {
     it("Should return 404 if recommendation not exist", async () => {
 
-        const response = await agent.post('/recommendations/9999/upvote');
+        const response = await agent.post('/recommendations/99/upvote');
 
         expect(response.status).toBe(404);
 
@@ -202,7 +206,7 @@ describe("POST /recommendations/:id/upvote", () => {
 describe("POST /recommendations/:id/downvote", () => {
     it("Should return 404 if recommendation not exist", async () => {
 
-        const response = await agent.post('/recommendations/9999/upvote');
+        const response = await agent.post('/recommendations/99/downvote');
 
         expect(response.status).toBe(404);
 
@@ -233,3 +237,58 @@ describe("POST /recommendations/:id/downvote", () => {
     });
 
 });
+
+describe("GET /recommendations/random", () => {
+    it("Should return 404 if don't have music registered", async () => {
+
+        await db.query("DELETE FROM recommendations;");
+
+        const response = await agent.get(`/recommendations/random`);
+
+        expect(response.status).toBe(404);
+
+    });
+
+    it("Should return 200 if return a recommendation", async () => {
+        
+        const supercombo = await db.query('INSERT INTO recommendations (name,  "youtubeLink", score) VALUES ($1, $2, $3) RETURNING *;', ["Supercombo - Menina Lagarta", "https://www.youtube.com/watch?v=chwyjJbcs1Y", 13]);
+
+        await db.query('INSERT INTO "genresRecommendations" ("recommendationId",  "genresId") VALUES ($1, $2);', [supercombo.rows[0].id, 1]);
+        await db.query('INSERT INTO "genresRecommendations" ("recommendationId",  "genresId") VALUES ($1, $2);', [supercombo.rows[0].id, 3]);
+
+        const rsigma = await db.query('INSERT INTO recommendations (name, "youtubeLink", score) VALUES ($1, $2, $3) RETURNING *;', ["RSigma - Cebola","https://www.youtube.com/watch?v=chwyjJbcs1Y", 13]);
+
+        await db.query('INSERT INTO "genresRecommendations"  ("recommendationId",  "genresId") VALUES ($1, $2);', [rsigma.rows[0].id, 2]);
+
+        await db.query('INSERT INTO "genresRecommendations"  ("recommendationId",  "genresId") VALUES ($1, $2);', [rsigma.rows[0].id, 4]);
+
+        const response = await agent.get(`/recommendations/random`);
+
+        expect(response.status).toBe(200);
+
+    });
+
+})
+
+describe("GET /recommendations/genres/:id/random", () => {
+    it("Should return 404 if there are no recommendations of this genre", async () => {
+
+        const response = await agent.get(`/recommendations/genres/999/random`);
+
+        expect(response.status).toBe(404);
+
+    });
+
+    it("Should return 200 if return a recommendation of this genre", async () => {
+
+        const deadFish = await db.query('INSERT INTO recommendations (name,  "youtubeLink", score) VALUES ($1, $2, $3) RETURNING *;', ["DeadFish - Queda Livre", "https://www.youtube.com/watch?v=chwyjJbcs1Y", 1]);
+
+        await db.query('INSERT INTO "genresRecommendations" ("recommendationId",  "genresId") VALUES ($1, $2);', [deadFish.rows[0].id, 3]);
+
+        const response = await agent.get(`/recommendations/genres/3/random`);
+
+        expect(response.status).toBe(200);
+
+    });
+
+} )
