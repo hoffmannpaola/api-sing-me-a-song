@@ -15,5 +15,4 @@ require('./utils/loadRelationships');
 app.use('/genres', genresRouter);
 app.use('/recommendations', recommendationsRouter);
 
-
 module.exports = app;

@@ -3,8 +3,8 @@ const Genre = require('../models/Genre');
 
 class GenresController {
   async create(req, res) {
-    try {
 
+    try {
       const validation = genreSchema.postGenre.validate(req.body);
       if(validation.error) return res.sendStatus(422);
 
@@ -17,8 +17,6 @@ class GenresController {
 
       res.sendStatus(201);
 
-
-     
     } catch (err) {
       console.error(err);
       return res.sendStatus(500);
@@ -32,21 +30,11 @@ class GenresController {
       res.send(genres).status(200);
       
     } catch (err) {
-      
       console.error(err);
       return res.sendStatus(500);
     }
   }
 
-  async getOne(req, res) {
-    try {
-      
-    } catch (err) {
-
-      console.error(err);
-      return res.sendStatus(500);
-    }
-  }
 }
 
 module.exports = new GenresController();

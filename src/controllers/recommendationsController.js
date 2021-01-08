@@ -3,12 +3,6 @@ const Recommendation = require('../models/Recommendation');
 const Genre = require('../models/Genre');
 const GenresRecommendations = require('../models/GenresRecommendations');
 
-
-
-const { Sequelize } = require('sequelize');
-const Op = Sequelize.Op;
-
-
 class RecommendationsController{
     async postRecommendation(req, res) {
       try {
@@ -49,7 +43,6 @@ class RecommendationsController{
     async upVote(req, res) {
       try {
         const id = req.params.id;
-       
         const recommendation = await Recommendation.findByPk(id);
         
         if(!recommendation) {
@@ -69,8 +62,8 @@ class RecommendationsController{
 
     async downVote(req, res) {
       try {
+
         const id = req.params.id;
-       
         const recommendation = await Recommendation.findByPk(id);
 
         if(!recommendation) {
@@ -83,7 +76,6 @@ class RecommendationsController{
         } else {
           //excluir recommendacao
           await recommendation.destroy();
-          
         }
 
         res.sendStatus(200);
@@ -105,10 +97,8 @@ class RecommendationsController{
           },
         });
         
-
         if(allRecommendations.length === 0) return res.sendStatus(404);
         
-
         const veryPopular = [];
         const unpopular = [];
 
@@ -124,7 +114,6 @@ class RecommendationsController{
 
         if(veryPopular.length == 0 || unpopular.length == 0 ){
           const shuffle = Math.floor(Math.random() * (allRecommendations.length)) + 1;
-          
           return res.send(allRecommendations[shuffle-1]).status(200);
         }
 
@@ -148,28 +137,36 @@ class RecommendationsController{
 
     async randomGenre(req, res) {
 
-      const id = parseInt(req.params.id);
-      const recommendationsByGenre = await GenresRecommendations.findAll({where: {genresId: id}});
+      try {
 
-      if(recommendationsByGenre.length === 0) {
-        return res.sendStatus(404);
-      }
+        const id = parseInt(req.params.id);
+        const recommendationsByGenre = await GenresRecommendations.findAll({where: {genresId: id}});
 
-      const shuffle = Math.floor(Math.random() * (recommendationsByGenre.length)) + 1;
+        if(recommendationsByGenre.length === 0) {
+          return res.sendStatus(404);
+        }
 
-      const recommendationId = recommendationsByGenre[shuffle-1].recommendationId;
+        const shuffle = Math.floor(Math.random() * (recommendationsByGenre.length)) + 1;
 
-      const theRecommendations = await Recommendation.findOne({
-        where: {id: recommendationId},
-        include: {
-          model: Genre,
-          as: 'genres',
-          through: { attributes: [] },
-    
-        },
-      });
+        const recommendationId = recommendationsByGenre[shuffle-1].recommendationId;
+
+        const theRecommendations = await Recommendation.findOne({
+          where: {id: recommendationId},
+          include: {
+            model: Genre,
+            as: 'genres',
+            through: { attributes: [] },
+      
+          },
+        });
 
       return res.send(theRecommendations).status(200);
+
+      } catch (err) {
+        console.error(err);
+        return res.sendStatus(500);
+      }
+
     }
   
   }

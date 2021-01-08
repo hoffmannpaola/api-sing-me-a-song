@@ -5,6 +5,7 @@ dotenv.config();
 const { Pool } = require("pg");
 const supertest = require("supertest");
 
+const { createRecomendations, createGenres } = require("./utils");
 const app = require("../src/app");
 
 const agent = supertest(app);
@@ -13,7 +14,6 @@ const db = new Pool({
 });
 
 beforeAll(async () => {
- 
   await db.query("ALTER SEQUENCE recommendations_id_seq RESTART WITH 1;");
   await db.query("ALTER SEQUENCE genres_id_seq RESTART WITH 1;");
   await db.query("DELETE FROM genres;");
@@ -22,7 +22,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.end();
-  
 });
 
 describe("POST /genres", () => {
@@ -40,7 +39,7 @@ describe("POST /genres", () => {
 
     it("Should return 409 if genre params already exists", async () => {
 
-        await db.query("INSERT INTO genres (name) values ($1);", ["Axé"]);
+        createGenres(db, "Axé")
 
         const body = {
             "name": "Axé"
@@ -63,14 +62,15 @@ describe("POST /genres", () => {
         expect(response.status).toBe(201);
 
     });
-})
+
+});
 
 describe("GET /genres", () => {
     it('Should return 200 with list of genres', async () => {
 
-        await db.query("INSERT INTO genres (name) values ($1);", ["Pagode"]);
-        await db.query("INSERT INTO genres (name) values ($1);", ["Sertanejo"]);
-        await db.query("INSERT INTO genres (name) values ($1);", ["Emo"]);
+        createGenres(db, "Pagode")
+        createGenres(db, "Sertanejo")
+        createGenres(db, "Emo")
 
         const response = await agent.get("/genres");
         const allGenres = response.body;
@@ -79,14 +79,15 @@ describe("GET /genres", () => {
         expect(allGenres).toEqual(
             expect.arrayContaining([
                 expect.objectContaining({
+                    "name": "Axé"
+                }),
+                expect.objectContaining({
+                    "name": "Rock"
+                }),
+                expect.objectContaining({
                     "name": "Pagode"
                 }),
-                expect.objectContaining({
-                    "name": "Sertanejo"
-                }),
-                expect.objectContaining({
-                    "name": "Emo"
-                }),
+                
             ])
         );
     });
@@ -179,7 +180,7 @@ describe("POST /recommendations", () => {
 
     });
 
-})
+});
 
 describe("POST /recommendations/:id/upvote", () => {
     it("Should return 404 if recommendation not exist", async () => {
@@ -250,17 +251,9 @@ describe("GET /recommendations/random", () => {
     });
 
     it("Should return 200 if return a recommendation", async () => {
-        
-        const supercombo = await db.query('INSERT INTO recommendations (name,  "youtubeLink", score) VALUES ($1, $2, $3) RETURNING *;', ["Supercombo - Menina Lagarta", "https://www.youtube.com/watch?v=chwyjJbcs1Y", 13]);
 
-        await db.query('INSERT INTO "genresRecommendations" ("recommendationId",  "genresId") VALUES ($1, $2);', [supercombo.rows[0].id, 1]);
-        await db.query('INSERT INTO "genresRecommendations" ("recommendationId",  "genresId") VALUES ($1, $2);', [supercombo.rows[0].id, 3]);
-
-        const rsigma = await db.query('INSERT INTO recommendations (name, "youtubeLink", score) VALUES ($1, $2, $3) RETURNING *;', ["RSigma - Cebola","https://www.youtube.com/watch?v=chwyjJbcs1Y", 13]);
-
-        await db.query('INSERT INTO "genresRecommendations"  ("recommendationId",  "genresId") VALUES ($1, $2);', [rsigma.rows[0].id, 2]);
-
-        await db.query('INSERT INTO "genresRecommendations"  ("recommendationId",  "genresId") VALUES ($1, $2);', [rsigma.rows[0].id, 4]);
+        createRecomendations(db, "Supercombo - Menina Lagarta", 13, [1, 3])
+        createRecomendations(db, "RSigma - Cebola", 7, [2, 4])
 
         const response = await agent.get(`/recommendations/random`);
 
@@ -268,7 +261,7 @@ describe("GET /recommendations/random", () => {
 
     });
 
-})
+});
 
 describe("GET /recommendations/genres/:id/random", () => {
     it("Should return 404 if there are no recommendations of this genre", async () => {
@@ -281,9 +274,7 @@ describe("GET /recommendations/genres/:id/random", () => {
 
     it("Should return 200 if return a recommendation of this genre", async () => {
 
-        const deadFish = await db.query('INSERT INTO recommendations (name,  "youtubeLink", score) VALUES ($1, $2, $3) RETURNING *;', ["DeadFish - Queda Livre", "https://www.youtube.com/watch?v=chwyjJbcs1Y", 1]);
-
-        await db.query('INSERT INTO "genresRecommendations" ("recommendationId",  "genresId") VALUES ($1, $2);', [deadFish.rows[0].id, 3]);
+        createRecomendations(db, "DeadFish - Queda Livre", 1, [3, 2])
 
         const response = await agent.get(`/recommendations/genres/3/random`);
 
@@ -291,4 +282,4 @@ describe("GET /recommendations/genres/:id/random", () => {
 
     });
 
-} )
+});
